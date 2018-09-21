@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="VideoDao">
+	<insert	id="insertOneVideo" parameterType="VideoVO">
+		INSERT INTO VIDEO (
+  							VIDEO_ID		
+  							, CHANNEL_ID	
+  							, TITLE			
+  							, UPLOADER_ID	
+  							, RUNNING_TIME
+  							, VIEW_COUNT	
+  							, UPLOAD_DATE	
+  							, POSTER_PATH	
+  							, VIDEO_PATH	
+  						  ) 
+		VALUES 			  ( 
+							'VD-'|| TO_CHAR(SYSDATE, 'YYYYMMDDHH24') || '-' || LPAD(VIDEO_ID_SEQ.NEXTVAL, 6, '0')
+							, '1'
+							, #{title}
+							, #{uploaderId}
+							, 0
+							, 0
+							, SYSDATE
+							, #{posterPath}
+							, #{videoPath} 
+		 				  )
+	</insert>
+	
+	<update id="updateOneVideo" parameterType="VideoVO">
+		
+	</update>
+	
+	<update id="updateViewCount" parameterType="String">
+		UPDATE	VIDEO
+		SET		VIEW_COUNT = VIEW_COUNT + 1
+		WHERE	VIDEO_ID = #{videoId}
+	</update>
+	
+	<delete id="deleteOneVideo" parameterType="string">
+		DELETE
+		FROM	VIDEO
+		WHERE	VIDEO_ID = #{videoId}
+	</delete>
+	
+	<select id="selectOneVideo" parameterType="string" resultMap="groupVideoMap">
+		SELECT	VIDEO_ID		
+				, CHANNEL_ID	
+				, TITLE			
+				, UPLOADER_ID	
+				, RUNNING_TIME	
+				, VIEW_COUNT	
+				, UPLOAD_DATE	
+				, POSTER_PATH	
+				, VIDEO_PATH	
+				, CASE
+		            WHEN DATE_DIFF >= 365 THEN
+		                TRUNC(DATE_DIFF / 365) || '년 전'
+		            WHEN DATE_DIFF >= 30 THEN
+		                TRUNC(DATE_DIFF / 30) || '개월 전'
+		            WHEN DATE_DIFF <![CDATA[ < ]]> 30 AND DATE_DIFF >= 7 THEN
+		                TRUNC(DATE_DIFF / 7) || '주 전'
+		            WHEN DATE_DIFF <![CDATA[ < ]]> 7 AND DATE_DIFF >= 1 THEN
+		                TRUNC(DATE_DIFF) || '일 전'
+		            WHEN TRUNC(DATE_DIFF * 24) <![CDATA[ < ]]> 24 AND TRUNC(DATE_DIFF * 24) > 0 THEN
+		                TRUNC(DATE_DIFF * 24) || '시간 전'
+		            WHEN TRUNC(DATE_DIFF * 24 * 60) <![CDATA[ < ]]> 60 AND TRUNC(DATE_DIFF * 24 * 60) > 0 THEN
+		                TRUNC(DATE_DIFF * 24 * 60) || '분 전'
+		            WHEN TRUNC(DATE_DIFF * 24 * 60) = 0 THEN
+		            	'방금 전'
+		            END DATE_DIFF
+		            , NAME
+		            , PICTURE_PATH
+		            , POINT
+		FROM	(
+					SELECT 	V.VIDEO_ID			
+							, V.CHANNEL_ID		
+							, V.TITLE			
+							, V.UPLOADER_ID		
+							, V.RUNNING_TIME	
+							, V.VIEW_COUNT		
+							, V.UPLOAD_DATE		
+							, V.POSTER_PATH		
+							, V.VIDEO_PATH		
+							, SYSDATE - TO_DATE(TO_CHAR(V.UPLOAD_DATE, 'YYYY-MM-DD-HH24:MI:SS'), 'YYYY-MM-DD-HH24:MI:SS') DATE_DIFF
+							, U.NAME
+							, U.PICTURE_PATH
+							, U.POINT
+					FROM 	VIDEO V
+							, UPLOADER U
+					WHERE	V.VIDEO_ID = #{videoId}
+				)
+	</select>
+		
+	<!-- 본래는 ResultMap 사용시 ID 를 PK로 넣지만 기준점이 되는 것을 ID 를 주면 된다. Group으로 지정할 때 -->
+	<resultMap type="GroupVideoVO" id="groupVideoMap">
+		<id column="UPLOADER_ID" property="uploaderId" />
+		<!-- List 를  넣어주기 위해, Map , set -->
+		<collection property="videoList" javaType="list" ofType="VideoVO">
+			<result column="VIDEO_ID" property="videoId" />		
+			<result column="CHANNEL_ID" property="channelId" />		
+			<result column="TITLE" property="title" />		
+			<result column="UPLOADER_ID" property="uploaderId" />	
+			<result column="RUNNING_TIME" property="runningTime" />		
+			<result column="VIEW_COUNT" property="viewCount" />		
+			<result column="UPLOAD_DATE" property="uploadDate" />		
+			<result column="POSTER_PATH" property="posterPath" />		
+			<result column="VIDEO_PATH" property="videoPath" />		
+			<result column="DATE_DIFF" property="dateDiff" />	
+			<association property="uploaderVO" javaType="UploaderVO">
+				<id column="UPLOADER_ID" property="uploaderId" />
+				<result column="NAME" property="name" />
+				<result column="POINT" property="point" />
+				<result column="PICTURE_PATH" property="picturePath" />
+			</association>
+		</collection> <!-- 이 Class의 VideoList는 VideoVO타입의 list야! -->
+	</resultMap>
+		
+	<select	id="selectAllVideo" resultMap="groupVideoMap">
+		SELECT	VIDEO_ID		
+				, CHANNEL_ID	
+				, TITLE			
+				, UPLOADER_ID	
+				, RUNNING_TIME	
+				, VIEW_COUNT	
+				, UPLOAD_DATE	
+				, POSTER_PATH	
+				, VIDEO_PATH	
+				, CASE
+		            WHEN DATE_DIFF >= 365 THEN
+		                TRUNC(DATE_DIFF / 365) || '년 전'
+		            WHEN DATE_DIFF >= 30 THEN
+		                TRUNC(DATE_DIFF / 30) || '개월 전'
+		            WHEN DATE_DIFF <![CDATA[ < ]]> 30 AND DATE_DIFF >= 7 THEN
+		                TRUNC(DATE_DIFF / 7) || '주 전'
+		            WHEN DATE_DIFF <![CDATA[ < ]]> 7 AND DATE_DIFF >= 1 THEN
+		                TRUNC(DATE_DIFF) || '일 전'
+		            WHEN TRUNC(DATE_DIFF * 24) <![CDATA[ < ]]> 24 AND TRUNC(DATE_DIFF * 24) > 0 THEN
+		                TRUNC(DATE_DIFF * 24) || '시간 전'
+		            WHEN TRUNC(DATE_DIFF * 24 * 60) <![CDATA[ < ]]> 60 AND TRUNC(DATE_DIFF * 24 * 60) > 0 THEN
+		                TRUNC(DATE_DIFF * 24 * 60) || '분 전'
+		            WHEN TRUNC(DATE_DIFF * 24 * 60) = 0 THEN
+		            	'방금 전'
+		            END DATE_DIFF
+		            , NAME
+		            , PICTURE_PATH
+		            , POINT
+		FROM	(
+					SELECT 	V.VIDEO_ID		
+							, V.CHANNEL_ID	
+							, V.TITLE			
+							, V.UPLOADER_ID	
+							, V.RUNNING_TIME	
+							, V.VIEW_COUNT	
+							, V.UPLOAD_DATE	
+							, V.POSTER_PATH	
+							, V.VIDEO_PATH	
+							, SYSDATE - TO_DATE(TO_CHAR(V.UPLOAD_DATE, 'YYYY-MM-DD-HH24:MI:SS'), 'YYYY-MM-DD-HH24:MI:SS') DATE_DIFF
+							, U.NAME
+							, U.PICTURE_PATH
+							, U.POINT
+					FROM 	VIDEO V
+							, UPLOADER U 
+					ORDER	BY V.VIDEO_ID DESC
+				)
+	</select>
+</mapper>

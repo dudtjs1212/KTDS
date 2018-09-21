@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UploaderDao">
+	<insert id="insertNewUploader" parameterType="UploaderVO">
+		INSERT	INTO	UPLOADER (
+									UPLOADER_ID
+									, NAME
+									, PASSWORD
+									, SALT
+									, PICTURE_PATH
+								 )
+		VALUES					 (
+									#{uploaderId}
+									, #{name}
+									, #{password}
+									, #{salt}
+									, #{picturePath}
+								 )
+	</insert>
+	
+	<select id="selectOneUploader" parameterType="UploaderVO" resultType="UploaderVO">
+		SELECT	UPLOADER_ID uploaderId
+				, NAME name
+				, PASSWORD password
+				, SALT salt
+				, POINT point
+				, PICTURE_PATH picturePath
+		FROM	UPLOADER
+		WHERE	UPLOADER_ID = #{uploaderId}
+		AND		PASSWORD = #{password}
+	</select>
+	
+	<select id="selectOneUploaderProfileImage" parameterType="string" resultType="string">
+		SELECT	PICTURE_PATH 
+		FROM	UPLOADER
+		WHERE	UPLOADER_ID = #{uploaderId}
+	</select>
+	
+	<update id="updatePoint" parameterType="map">
+		UPDATE	UPLOADER
+		SET		POINT = POINT + #{point}
+		WHERE	UPLOADER_ID = #{uploaderId}
+	</update>
+</mapper>
